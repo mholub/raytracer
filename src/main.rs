@@ -1,9 +1,13 @@
 #![allow(dead_code)]
 
+use crate::programs::*;
+
+mod material;
+mod camera;
+mod random;
 mod ppm;
-mod second_image;
+mod programs;
 mod types;
-mod first_image;
 mod intersections;
 
 fn main() {
