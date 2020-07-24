@@ -10,6 +10,7 @@ edition = "2018"
 nalgebra-glm = "0.7.0"
 rand = "0.7.3"
 rayon = "1.3.1"
+indicatif = "0.15.0"
 
 [profile.dev]
 opt-level = 2

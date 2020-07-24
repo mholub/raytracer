@@ -1,5 +1,6 @@
 use crate::types::{Point3, Ray, Vec3};
 use crate::material::{Material};
+use std::sync::Arc;
 
 pub struct HitRecord {
     pub point: Point3,
@@ -23,7 +24,7 @@ pub trait Hittable {
 }
 
 pub struct World {
-    pub objects: Vec<Sphere>
+    pub objects: Vec<Arc<dyn Hittable + Send + Sync>>
 }
 
 impl World {

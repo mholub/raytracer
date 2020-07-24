@@ -1,7 +1,7 @@
 use crate::types::*;
 use crate::intersections::{Sphere, Hittable, World};
 use crate::ppm::*;
-use std::io::{Write, BufWriter};
+use std::io::{BufWriter};
 use std::path::Path;
 use std::fs::{OpenOptions};
 use std::process::Command;
@@ -9,6 +9,8 @@ use crate::camera::Camera;
 use crate::random::*;
 use crate::material::{Lambertian, Metal, Scatter, Material};
 use rayon::prelude::*;
+use std::sync::Arc;
+use indicatif::{ProgressBar, ProgressStyle, ProgressDrawTarget};
 
 fn ray_color(ray: &Ray, world: &World, depth: i32) -> Color {
     if depth <= 0 {
@@ -31,34 +33,34 @@ fn ray_color(ray: &Ray, world: &World, depth: i32) -> Color {
 fn make_world() -> World {
     let material_ground = Material::Lambertian(Lambertian(Color::new(0.8, 0.8, 0.0)));
     let material_center = Material::Lambertian(Lambertian(Color::new(0.7, 0.3, 0.3)));
-    let material_left = Material::Metal(Metal::new(Color::new(0.8, 0.8, 0.8), 0.3));
+    let material_left = Material::Metal(Metal::new(Color::new(0.8, 0.8, 0.8), 0.2));
     let material_right = Material::Metal(Metal::new(Color::new(0.8, 0.6, 0.2), 1.0));
 
     let mut world = World::new();
 
-    world.objects.push(Sphere {
+    world.objects.push(Arc::new(Sphere {
         center: Point3::new(0.0, -100.5, -1.0),
         radius: 100.0,
         material: material_ground.clone(),
-    });
+    }));
 
-    world.objects.push(Sphere {
+    world.objects.push(Arc::new(Sphere {
         center: Point3::new(0.0, 0.0, -1.0),
         radius: 0.5,
         material: material_center.clone(),
-    });
+    }));
 
-    world.objects.push(Sphere {
+    world.objects.push(Arc::new(Sphere {
         center: Point3::new(-1.0, 0.0, -1.0),
         radius: 0.5,
         material: material_left.clone(),
-    });
+    }));
 
-    world.objects.push(Sphere {
+    world.objects.push(Arc::new(Sphere {
         center: Point3::new(1.0, 0.0, -1.0),
         radius: 0.5,
         material: material_right.clone(),
-    });
+    }));
 
     world
 }
@@ -66,7 +68,7 @@ fn make_world() -> World {
 pub fn main() {
     let cam = Camera::new();
     let aspect_ratio = 16.0 / 9.0;
-    let image_width = 500;
+    let image_width = 1920;
     let image_height = (image_width as f32 / aspect_ratio) as i32;
     let samples_per_pixel = 100;
     let max_depth = 50;
@@ -76,22 +78,34 @@ pub fn main() {
     let mut file = BufWriter::new(OpenOptions::new().create(true).write(true).open(&path).unwrap());
 
     write_header(&mut file, image_width, image_height);
-    for j in (0..image_height).rev() {
-        eprint!("\rScanlines remaining: {} ", j);
-        std::io::stderr().flush().unwrap();
-        for i in 0..image_width {
-            let mut pixel_color: Color = (0..samples_per_pixel).into_par_iter().map(|_i| {
-                let u = (i as f32 + rand()) / (image_width - 1) as f32;
-                let v = (j as f32 + rand()) / (image_height - 1) as f32;
 
-                let r = cam.get_ray(u, v);
-                ray_color(&r, &world, max_depth)
-            }).sum();
+    let pb = ProgressBar::new((image_height * image_width) as u64);
+    pb.set_draw_target(ProgressDrawTarget::stdout());
+    pb.set_draw_delta(pb.length() / 100);
+    pb.set_style(ProgressStyle::default_bar().template("[{elapsed} elapsed] {wide_bar:.cyan/white} {percent}% [{eta} remaining] [rendering]"));
 
-            pixel_color /= samples_per_pixel as f32;
-            pixel_color = Color::new(pixel_color.x.sqrt(), pixel_color.y.sqrt(), pixel_color.z.sqrt());
-            pixel_color.write_ppm(&mut file);
-        }
+    let pixels = (0..image_height).rev().flat_map(|j| {
+        (0..image_width).map(move |i| (j, i))
+    }).collect::<Vec<_>>().into_par_iter().map(|(j, i)| {
+        let mut pixel_color: Color = (0..samples_per_pixel).into_iter().map(|_i| {
+            let u = (i as f32 + rand()) / (image_width - 1) as f32;
+            let v = (j as f32 + rand()) / (image_height - 1) as f32;
+
+            let r = cam.get_ray(u, v);
+            ray_color(&r, &world, max_depth)
+        }).sum();
+
+        pixel_color /= samples_per_pixel as f32;
+        pixel_color = Color::new(pixel_color.x.sqrt(), pixel_color.y.sqrt(), pixel_color.z.sqrt());
+        pb.inc(1);
+        pixel_color
+
+    }).collect::<Vec<Color>>();
+
+    pb.finish();
+
+    for pixel_color in pixels {
+        pixel_color.write_ppm(&mut file);
     }
 
     Command::new("open").arg(path).spawn().unwrap();
