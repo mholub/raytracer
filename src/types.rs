@@ -6,12 +6,13 @@ pub type Vec3 = glm::Vec3;
 
 pub struct Ray {
     origin : Point3,
-    direction : Vec3
+    direction : Vec3,
+    pub(crate) time: f32
 }
 
 impl Ray {
-    pub(crate) fn new(origin : Point3, direction : Vec3) -> Ray {
-        Ray { origin, direction }
+    pub(crate) fn new(origin : Point3, direction : Vec3, time: f32) -> Ray {
+        Ray { origin, direction, time }
     }
 
     pub(crate) fn origin(&self) -> Point3 {

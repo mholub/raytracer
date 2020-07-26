@@ -27,9 +27,9 @@ impl Scatter for Material {
 pub struct Lambertian(pub Color);
 
 impl Scatter for Lambertian {
-    fn scatter(&self, _ray_in: &Ray, hit: &HitRecord) -> Option<(Ray, Color)> {
+    fn scatter(&self, ray_in: &Ray, hit: &HitRecord) -> Option<(Ray, Color)> {
         let scatter_direction = hit.normal + Vec3::rand_unit();
-        Some((Ray::new(hit.point, scatter_direction), self.0))
+        Some((Ray::new(hit.point, scatter_direction, ray_in.time), self.0))
     }
 }
 
@@ -56,7 +56,7 @@ impl Scatter for Metal {
     fn scatter(&self, ray_in: &Ray, hit: &HitRecord) -> Option<(Ray, Color)> {
         let reflected = reflect(&ray_in.direction().normalize(), &hit.normal);
 
-        let scattered = Ray::new(hit.point, reflected + self.fuzz * Vec3::rand_in_unit_sphere());
+        let scattered = Ray::new(hit.point, reflected + self.fuzz * Vec3::rand_in_unit_sphere(), ray_in.time);
         if scattered.direction().dot(&hit.normal) > 0.0 {
             Some((scattered, self.albedo))
         } else {
@@ -126,15 +126,15 @@ impl Scatter for Dielectric {
 
         if etai_over_etat * sin_theta > 1.0 {
             let reflected = reflect(&unit_direction, &hit.normal);
-            Some((Ray::new(hit.point, reflected), attenuation))
+            Some((Ray::new(hit.point, reflected, ray_in.time), attenuation))
         } else {
             let reflect_probability = schlick(cos_theta, etai_over_etat);
             if rand() < reflect_probability {
                 let reflected = reflect(&unit_direction, &hit.normal);
-                Some((Ray::new(hit.point, reflected), attenuation))
+                Some((Ray::new(hit.point, reflected, ray_in.time), attenuation))
             } else {
                 let refracted = refract(&unit_direction, &hit.normal, etai_over_etat);
-                Some((Ray::new(hit.point, refracted), attenuation))
+                Some((Ray::new(hit.point, refracted, ray_in.time), attenuation))
             }
         }
     }

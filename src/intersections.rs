@@ -63,15 +63,14 @@ thread_local! {
 
 pub struct World {
     pub objects: Vec<WorldObject>,
-    pub bvh: BVH
+    pub bvh: BVH,
 }
 
 impl World {
     pub fn new() -> World {
-        let mut objects = vec![];
         World {
-            objects: objects,
-            bvh: BVH { nodes: vec![] }
+            objects: vec![],
+            bvh: BVH { nodes: vec![] },
         }
     }
 
@@ -154,7 +153,7 @@ impl Hittable for Sphere {
                     normal: (p - self.center) / self.radius,
                     t: temp,
                     front_face: true,
-                    material: self.material.clone(),
+                    material: self.material,
                 };
                 result.set_face_normal(ray);
                 return Some(result);
@@ -173,5 +172,50 @@ impl Bounded for Sphere {
         let min = center - half_size;
         let max = center + half_size;
         AABB::with_bounds(min, max)
+    }
+}
+
+#[derive(Clone, Copy, Debug)]
+pub struct MovingSphere {
+    pub center1: Point3,
+    pub time1: f32,
+    pub center2: Point3,
+    pub time2: f32,
+    pub radius: f32,
+    pub material: Material,
+}
+
+impl MovingSphere {
+    pub fn center(&self, time: f32) -> Point3 {
+        self.center1 + ((time - self.time1) / (self.time2 - self.time1)) * (self.center2 - self.center1)
+    }
+}
+
+impl Hittable for MovingSphere {
+    fn hit(&self, ray: &Ray, t_min: f32, t_max: f32) -> Option<HitRecord> {
+        let s = Sphere {
+            center: self.center(ray.time),
+            material: self.material,
+            radius: self.radius
+        };
+        s.hit(ray, t_min, t_max)
+    }
+}
+
+impl Bounded for MovingSphere {
+    fn aabb(&self) -> AABB {
+        let s1 = Sphere {
+            center: self.center(self.time1),
+            material: self.material,
+            radius: self.radius
+        };
+
+        let s2 = Sphere {
+            center: self.center(self.time2),
+            material: self.material,
+            radius: self.radius
+        };
+
+        s1.aabb().join(&s2.aabb())
     }
 }

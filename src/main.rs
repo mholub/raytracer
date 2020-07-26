@@ -10,7 +10,6 @@ use std::path::Path;
 use std::fs::{OpenOptions};
 use std::process::Command;
 use rayon::prelude::*;
-use std::sync::Arc;
 use indicatif::{ProgressBar, ProgressStyle, ProgressDrawTarget};
 use crate::intersections::*;
 use crate::types::*;
@@ -53,19 +52,36 @@ fn make_random_world() -> World {
             let choose_mat = rand();
             let center = Vec3::new(a as f32 + 0.9 * rand(), 0.2, b as f32 + rand());
             if (center - Vec3::new(4.0, 0.2, 0.0)).magnitude() > 0.9 {
-                let material = match choose_mat {
-                    x if x < 0.8 => Material::Lambertian(Lambertian(Color::new(rand(), rand(), rand()).component_mul(&Color::new(rand(), rand(), rand())))),
-                    x if x < 0.95 => Material::Metal(Metal::new(
-                        Color::new(rand_range(0.5, 1.0), rand_range(0.5, 1.0), rand_range(0.5, 1.0)),
-                        rand_range(0.0, 0.5))),
-                    _ => Material::Dielectric(Dielectric(1.5))
-                };
-
-                world.add(Sphere {
-                    center: center,
-                    radius: 0.2,
-                    material: material,
-                });
+                match choose_mat {
+                    x if x < 0.8 => {
+                        let center2 = center + Vec3::new(0.0, rand_range(0.0, 0.5), 0.0);
+                        world.add(MovingSphere {
+                            center1: center,
+                            center2: center2,
+                            time1: 0.0,
+                            time2: 1.0,
+                            radius: 0.2,
+                            material: Material::Lambertian(
+                                Lambertian(Color::new(rand(), rand(), rand()).component_mul(&Color::new(rand(), rand(), rand()))))
+                        });
+                    }
+                    x if x < 0.95 => {
+                        world.add(Sphere {
+                            center: center,
+                            radius: 0.2,
+                            material: Material::Metal(Metal::new(
+                                Color::new(rand_range(0.5, 1.0), rand_range(0.5, 1.0), rand_range(0.5, 1.0)),
+                                rand_range(0.0, 0.5)))
+                        });
+                    },
+                    _ => {
+                        world.add(Sphere {
+                            center: center,
+                            radius: 0.2,
+                            material: Material::Dielectric(Dielectric(1.5))
+                        });
+                    }
+                }
             }
         }
     }
@@ -107,11 +123,11 @@ pub fn main() {
     let aperture = 0.1;
 
     let cam = Camera::new(&lookfrom, &lookat, &Vec3::new(0.0, 1.0, 0.0), 20.0, aspect_ratio,
-                          aperture, focus_dist);
+                          aperture, focus_dist, 0.0, 1.0);
 
-    let image_width = 500;
+    let image_width = 1920;
     let image_height = (image_width as f32 / aspect_ratio) as i32;
-    let samples_per_pixel = 100;
+    let samples_per_pixel = 500;
     let max_depth = 50;
     let world = make_random_world();
 

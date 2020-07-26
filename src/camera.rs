@@ -1,5 +1,5 @@
 use crate::types::{Point3, Vec3, Ray};
-use crate::random::RandomVectors;
+use crate::random::{RandomVectors, rand_range};
 
 pub struct Camera {
     pub origin: Point3,
@@ -9,11 +9,13 @@ pub struct Camera {
     lens_radius: f32,
     u: Vec3,
     v: Vec3,
-    w: Vec3,
+    _w: Vec3,
+    t0: f32,
+    t1: f32
 }
 
 impl Camera {
-    pub fn new(lookfrom: &Vec3, lookat: &Vec3, vup: &Vec3, vfov: f32, aspect_ratio: f32, aperture: f32, focus_dist: f32) -> Camera {
+    pub fn new(lookfrom: &Vec3, lookat: &Vec3, vup: &Vec3, vfov: f32, aspect_ratio: f32, aperture: f32, focus_dist: f32, t0: f32, t1: f32) -> Camera {
         let theta = vfov.to_radians();
         let h = (theta / 2.0).tan();
 
@@ -36,7 +38,8 @@ impl Camera {
             lens_radius,
             u,
             v,
-            w,
+            _w: w,
+            t0, t1
         }
     }
 
@@ -44,6 +47,7 @@ impl Camera {
         let rd = self.lens_radius * Vec3::rand_in_unit_disk();
         let offset = self.u * rd.x + self.v * rd.y;
 
-        Ray::new(self.origin + offset, self.lower_left_corner + u * self.horizontal + v * self.vertical - self.origin - offset)
+        Ray::new(self.origin + offset, self.lower_left_corner + u * self.horizontal + v * self.vertical - self.origin - offset,
+        rand_range(self.t0, self.t1))
     }
 }
