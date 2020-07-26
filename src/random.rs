@@ -17,6 +17,7 @@ pub trait RandomVectors {
     fn rand_unit() -> Vec3;
     fn rand_in_hemisphere(normal: &Vec3) -> Vec3;
     fn rand_in_unit_sphere() -> Vec3;
+    fn rand_in_unit_disk() -> Vec3;
 }
 
 impl RandomVectors for Vec3 {
@@ -51,6 +52,15 @@ impl RandomVectors for Vec3 {
         let mut p = 2.0 * Vec3::new(rng.gen(), rng.gen(), rng.gen()) - Vec3::new(1.0, 1.0, 1.0);
         while p.magnitude_squared() >= 1.0 {
             p = 2.0 * Vec3::new(rng.gen(), rng.gen(), rng.gen()) - Vec3::new(1.0, 1.0, 1.0);
+        }
+        p
+    }
+
+    fn rand_in_unit_disk() -> Vec3 {
+        let mut rng = rand::thread_rng();
+        let mut p = Vec3::new(rng.gen_range(-1.0, 1.0), rng.gen_range(-1.0, 1.0), 0.0);
+        while p.magnitude_squared() >= 1.0 {
+            p = Vec3::new(rng.gen_range(-1.0, 1.0), rng.gen_range(-1.0, 1.0), 0.0)
         }
         p
     }
