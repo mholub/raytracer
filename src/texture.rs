@@ -1,12 +1,14 @@
 use crate::types::{Point3, Color};
 use enum_dispatch::enum_dispatch;
 use std::sync::Arc;
+use crate::perlin::Perlin;
 
 #[enum_dispatch]
 #[derive(Clone)]
 pub enum Texture {
     SolidColor,
-    CheckerTexture
+    CheckerTexture,
+    NoiseTexture
 }
 
 #[enum_dispatch(Texture)]
@@ -37,5 +39,20 @@ impl GetColor for CheckerTexture {
     fn value(&self, u: f32, v: f32, p: Point3) -> Color {
         let sines = (10.0 * p.x).sin() * (10.0 * p.y).sin() * (10.0 * p.z).sin();
         if sines < 0.0 { self.0.value(u, v, p) } else { self.1.value(u, v, p) }
+    }
+}
+
+#[derive(Clone)]
+pub struct NoiseTexture(f32, Perlin);
+
+impl NoiseTexture {
+    pub fn new(scale: f32) -> Self {
+        Self(scale, Perlin::new())
+    }
+}
+
+impl GetColor for NoiseTexture {
+    fn value(&self, u: f32, v: f32, p: Point3) -> Color {
+        Color::new(1.0, 1.0, 1.0) * 0.5 * (1.0 + (self.0*p.z + 10.0 * self.1.turb(p, 7)).sin())
     }
 }

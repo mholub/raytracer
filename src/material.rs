@@ -2,26 +2,19 @@ use crate::types::{Ray, Color, Vec3};
 use crate::intersections::HitRecord;
 use crate::random::*;
 use crate::texture::*;
+use enum_dispatch::enum_dispatch;
 
+#[enum_dispatch(Material)]
 pub trait Scatter {
     fn scatter(&self, ray_in: &Ray, hit: &HitRecord) -> Option<(Ray, Color)>;
 }
 
+#[enum_dispatch]
 #[derive(Clone)]
 pub enum Material {
-    Lambertian(Lambertian),
-    Metal(Metal),
-    Dielectric(Dielectric),
-}
-
-impl Scatter for Material {
-    fn scatter(&self, ray_in: &Ray, hit: &HitRecord) -> Option<(Ray, Color)> {
-        match *self {
-            Material::Lambertian(ref inner) => inner.scatter(ray_in, hit),
-            Material::Metal(ref inner) => inner.scatter(ray_in, hit),
-            Material::Dielectric(ref inner) => inner.scatter(ray_in, hit)
-        }
-    }
+    Lambertian,
+    Metal,
+    Dielectric,
 }
 
 #[derive(Clone)]
