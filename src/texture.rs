@@ -30,8 +30,8 @@ pub struct CheckerTexture(pub Arc<dyn GetColor + Send + Sync>, pub Arc<dyn GetCo
 
 impl CheckerTexture {
     pub fn from_colors(color1: Color, color2: Color) -> Self {
-        CheckerTexture(Arc::new(Texture::SolidColor(SolidColor(color1))),
-                       Arc::new(Texture::SolidColor(SolidColor(color2))))
+        CheckerTexture(Arc::new(Texture::from(SolidColor(color1))),
+                       Arc::new(Texture::from(SolidColor(color2))))
     }
 }
 

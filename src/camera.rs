@@ -15,7 +15,8 @@ pub struct Camera {
 }
 
 impl Camera {
-    pub fn new(lookfrom: &Vec3, lookat: &Vec3, vup: &Vec3, vfov: f32, aspect_ratio: f32, aperture: f32, focus_dist: f32, t0: f32, t1: f32) -> Camera {
+    pub fn new(lookfrom: &Vec3, lookat: &Vec3, vup: &Vec3, vfov: f32, aspect_ratio: f32,
+               aperture: f32, focus_dist: f32, t0: f32, t1: f32) -> Camera {
         let theta = vfov.to_radians();
         let h = (theta / 2.0).tan();
 
