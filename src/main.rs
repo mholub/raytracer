@@ -1,3 +1,4 @@
+mod texture;
 mod types;
 mod camera;
 mod intersections;
@@ -39,7 +40,8 @@ fn ray_color(ray: &Ray, world: &World, depth: i32) -> Color {
 fn make_random_world() -> World {
     let mut world = World::new();
 
-    let material_ground = Material::Lambertian(Lambertian(Color::new(0.5, 0.5, 0.5)));
+    let material_ground = Material::Lambertian(Lambertian::from_colors(Color::new(0.2, 0.3, 0.1),
+                                                                       Color::new(0.9, 0.9, 0.9)));
 
     world.add(Sphere {
         center: Point3::new(0.0, -1000.0, 0.0),
@@ -62,7 +64,7 @@ fn make_random_world() -> World {
                             time2: 1.0,
                             radius: 0.2,
                             material: Material::Lambertian(
-                                Lambertian(Color::new(rand(), rand(), rand()).component_mul(&Color::new(rand(), rand(), rand()))))
+                                Lambertian::from_color(Color::new(rand(), rand(), rand()).component_mul(&Color::new(rand(), rand(), rand()))))
                         });
                     }
                     x if x < 0.95 => {
@@ -94,7 +96,7 @@ fn make_random_world() -> World {
         material: material1.clone(),
     });
 
-    let material2 = Material::Lambertian(Lambertian(Color::new(0.4, 0.2, 0.1)));
+    let material2 = Material::Lambertian(Lambertian::from_color(Color::new(0.4, 0.2, 0.1)));
 
     world.add(Sphere {
         center: Point3::new(-4.0, 1.0, 0.0),
@@ -125,9 +127,9 @@ pub fn main() {
     let cam = Camera::new(&lookfrom, &lookat, &Vec3::new(0.0, 1.0, 0.0), 20.0, aspect_ratio,
                           aperture, focus_dist, 0.0, 1.0);
 
-    let image_width = 1920;
+    let image_width = 500;
     let image_height = (image_width as f32 / aspect_ratio) as i32;
-    let samples_per_pixel = 500;
+    let samples_per_pixel = 50;
     let max_depth = 50;
     let world = make_random_world();
 

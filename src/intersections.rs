@@ -7,9 +7,12 @@ use bvh::nalgebra::{Point3 as BVHPoint3, Vector3 as BVHVector3};
 use bvh::ray::Ray as BVHRay;
 use bvh::bounding_hierarchy::BHShape;
 use std::cell::RefCell;
+use nalgebra_glm::RealField;
 
 pub struct HitRecord {
     pub point: Point3,
+    pub u: f32,
+    pub v: f32,
     pub normal: Vec3,
     pub t: f32,
     pub front_face: bool,
@@ -19,6 +22,7 @@ pub struct HitRecord {
 impl HitRecord {
     pub fn set_face_normal(&mut self, ray: &Ray) {
         self.front_face = ray.direction().dot(&self.normal) < 0.0;
+        
         if !self.front_face {
             self.normal = -self.normal;
         }
@@ -114,11 +118,21 @@ impl Hittable for World {
     }
 }
 
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone)]
 pub struct Sphere {
     pub center: Point3,
     pub radius: f32,
     pub material: Material,
+}
+
+impl Sphere {
+    fn get_uv(&self, local_p: Point3) -> (f32, f32) {
+        let phi = local_p.z.atan2(local_p.x);
+        let theta = local_p.y.asin();
+        let u = 1.0 - (phi + f32::pi()) / (2.0 * f32::pi());
+        let v = (theta + f32::pi()/2.0) / f32::pi();
+        (u, v)
+    }
 }
 
 impl Hittable for Sphere {
@@ -134,12 +148,16 @@ impl Hittable for Sphere {
             let temp = (-half_b - root) / a;
             if temp > t_min && temp < t_max {
                 let p = ray.at(temp);
+                let local_p = (p - self.center)/self.radius;
+                let (u, v) = self.get_uv(local_p);
+
                 let mut result = HitRecord {
                     point: ray.at(temp),
                     normal: (p - self.center) / self.radius,
                     t: temp,
                     front_face: true,
-                    material: self.material,
+                    material: self.material.clone(),
+                    u, v
                 };
                 result.set_face_normal(ray);
                 return Some(result);
@@ -148,12 +166,15 @@ impl Hittable for Sphere {
             let temp = (-half_b + root) / a;
             if temp > t_min && temp < t_max {
                 let p = ray.at(temp);
+                let local_p = (p - self.center)/self.radius;
+                let (u, v) = self.get_uv(local_p);
                 let mut result = HitRecord {
                     point: ray.at(temp),
                     normal: (p - self.center) / self.radius,
                     t: temp,
                     front_face: true,
-                    material: self.material,
+                    material: self.material.clone(),
+                    u, v
                 };
                 result.set_face_normal(ray);
                 return Some(result);
@@ -175,7 +196,7 @@ impl Bounded for Sphere {
     }
 }
 
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone)]
 pub struct MovingSphere {
     pub center1: Point3,
     pub time1: f32,
@@ -195,7 +216,7 @@ impl Hittable for MovingSphere {
     fn hit(&self, ray: &Ray, t_min: f32, t_max: f32) -> Option<HitRecord> {
         let s = Sphere {
             center: self.center(ray.time),
-            material: self.material,
+            material: self.material.clone(),
             radius: self.radius
         };
         s.hit(ray, t_min, t_max)
@@ -206,13 +227,13 @@ impl Bounded for MovingSphere {
     fn aabb(&self) -> AABB {
         let s1 = Sphere {
             center: self.center(self.time1),
-            material: self.material,
+            material: self.material.clone(),
             radius: self.radius
         };
 
         let s2 = Sphere {
             center: self.center(self.time2),
-            material: self.material,
+            material: self.material.clone(),
             radius: self.radius
         };
 

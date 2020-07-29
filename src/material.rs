@@ -1,12 +1,13 @@
 use crate::types::{Ray, Color, Vec3};
 use crate::intersections::HitRecord;
 use crate::random::*;
+use crate::texture::*;
 
 pub trait Scatter {
     fn scatter(&self, ray_in: &Ray, hit: &HitRecord) -> Option<(Ray, Color)>;
 }
 
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone)]
 pub enum Material {
     Lambertian(Lambertian),
     Metal(Metal),
@@ -23,13 +24,23 @@ impl Scatter for Material {
     }
 }
 
-#[derive(Clone, Copy, Debug)]
-pub struct Lambertian(pub Color);
+#[derive(Clone)]
+pub struct Lambertian(pub Texture);
+
+impl Lambertian {
+    pub fn from_color(color: Color) -> Self {
+        Lambertian(Texture::SolidColor(SolidColor(color)))
+    }
+
+    pub fn from_colors(color1: Color, color2: Color) -> Self {
+        Lambertian(Texture::CheckerTexture(CheckerTexture::from_colors(color1, color2)))
+    }
+}
 
 impl Scatter for Lambertian {
     fn scatter(&self, ray_in: &Ray, hit: &HitRecord) -> Option<(Ray, Color)> {
         let scatter_direction = hit.normal + Vec3::rand_unit();
-        Some((Ray::new(hit.point, scatter_direction, ray_in.time), self.0))
+        Some((Ray::new(hit.point, scatter_direction, ray_in.time), self.0.value(hit.u, hit.v, hit.point)))
     }
 }
 
