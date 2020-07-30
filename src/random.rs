@@ -11,7 +11,7 @@ pub fn rand_range(low: f32, high: f32) -> f32 {
     rng.gen_range(low, high)
 }
 
-pub trait RandomVectors {
+pub trait Vector {
     fn rand() -> Vec3;
     fn rand_range(min: f32, max: f32) -> Vec3;
     fn rand_unit() -> Vec3;
@@ -20,7 +20,7 @@ pub trait RandomVectors {
     fn rand_in_unit_disk() -> Vec3;
 }
 
-impl RandomVectors for Vec3 {
+impl Vector for Vec3 {
     fn rand() -> Vec3 {
         Self::new(rand(), rand(), rand())
     }

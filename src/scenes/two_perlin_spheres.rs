@@ -1,8 +1,10 @@
-use crate::intersections::*;
-use crate::material::*;
+#![allow(dead_code)]
+
+use crate::intersections::{Sphere, World};
+use crate::material::{Lambertian, Material};
 use crate::scenes::Scene;
-use crate::types::*;
-use crate::texture::*;
+use crate::types::Point3;
+use crate::texture::{Noise, Texture};
 
 pub fn scene() -> Scene {
     Scene {
@@ -17,7 +19,7 @@ pub fn scene() -> Scene {
 fn make_world() -> World {
     let mut world = World::new();
 
-    let material_spheres = Material::from(Lambertian(Texture::from(NoiseTexture::new(4.0))));
+    let material_spheres = Material::from(Lambertian(Texture::from(Noise::new(4.0))));
 
     world.add(Sphere {
         center: Point3::new(0.0, -1000.0, 0.0),
@@ -28,7 +30,7 @@ fn make_world() -> World {
     world.add(Sphere {
         center: Point3::new(0.0, 2.0, 0.0),
         radius: 2.0,
-        material: material_spheres.clone(),
+        material: material_spheres,
     });
 
     world.build_bvh();

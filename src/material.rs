@@ -1,7 +1,9 @@
+#![allow(dead_code)]
+
 use crate::types::{Ray, Color, Vec3};
 use crate::intersections::HitRecord;
-use crate::random::*;
-use crate::texture::*;
+use crate::random::{Vector, rand};
+use crate::texture::{Checker, GetColor, SolidColor, Texture};
 use enum_dispatch::enum_dispatch;
 
 #[enum_dispatch(Material)]
@@ -26,7 +28,7 @@ impl Lambertian {
     }
 
     pub fn from_colors(color1: Color, color2: Color) -> Self {
-        Lambertian(Texture::from(CheckerTexture::from_colors(color1, color2)))
+        Lambertian(Texture::from(Checker::from_colors(color1, color2)))
     }
 }
 

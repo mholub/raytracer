@@ -2,7 +2,7 @@ use std::io::Write;
 use crate::types::Color;
 use nalgebra_glm::{clamp_scalar};
 
-pub fn write_header<W:Write>(writer : &mut W, width : i32, height : i32) {
+pub fn write_header<W:Write>(writer : &mut W, width : u32, height : u32) {
     writeln!(writer, "P3").unwrap();
     writeln!(writer, "{} {}", width, height).unwrap();
     writeln!(writer, "255").unwrap();
@@ -13,6 +13,8 @@ pub trait WritePPM {
 }
 
 impl WritePPM for Color {
+    #[allow(clippy::cast_possible_truncation)]
+    #[allow(clippy::cast_sign_loss)]
     fn write_ppm<W:Write>(&self, writer : &mut W) {
         let ir = (256.0 * clamp_scalar(self.x, 0.0, 0.999)) as u8;
         let ig = (256.0 * clamp_scalar(self.y, 0.0, 0.999)) as u8;

@@ -1,6 +1,12 @@
-use crate::random::*;
+#![allow(clippy::cast_precision_loss)]
+#![allow(clippy::cast_sign_loss)]
+#![allow(clippy::many_single_char_names)]
+#![allow(clippy::needless_range_loop)]
+#![allow(clippy::cast_possible_truncation)]
+
+use crate::random::Vector;
 use rand::Rng;
-use crate::types::{Color, Point3, Vec3};
+use crate::types::{Point3, Vec3};
 use std::sync::Arc;
 
 const N: usize = 256;
@@ -13,6 +19,7 @@ pub struct Perlin {
     perm_z: Arc<[usize; N]>,
 }
 
+#[allow(clippy::needless_range_loop)]
 fn perlin_interp(c: [[[Vec3; 2]; 2]; 2], u: f32, v: f32, w: f32) -> f32 {
     let uu = u*u*(3.0-2.0*u);
     let vv = v*v*(3.0-2.0*v);
@@ -31,7 +38,7 @@ fn perlin_interp(c: [[[Vec3; 2]; 2]; 2], u: f32, v: f32, w: f32) -> f32 {
         }
     }
 
-    return accum;
+    accum
 }
 
 impl Perlin {
@@ -58,7 +65,7 @@ impl Perlin {
         let mut temp_p = p;
         let mut weight = 1.0;
 
-        for i in 0..depth {
+        for _i in 0..depth {
             accum += weight*self.noise(temp_p);
             weight *= 0.5;
             temp_p *= 2.0;
@@ -98,10 +105,8 @@ impl Perlin {
 
     fn generate_perm() -> Arc<[usize; N]> {
         let mut result = [0; N];
-        let mut i = 0;
-        for x in result.iter_mut() {
+        for (i, x) in result.iter_mut().enumerate() {
             *x = i;
-            i += 1;
         }
 
         Self::permute(&mut result);
@@ -112,9 +117,7 @@ impl Perlin {
         let mut rng = rand::thread_rng();
         for i in (1..arr.len()).rev() {
             let target = rng.gen_range(0, i);
-            let tmp = arr[i];
-            arr[i] = arr[target];
-            arr[target] = tmp;
+            arr.swap(i, target);
         }
     }
 }

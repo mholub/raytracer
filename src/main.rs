@@ -1,3 +1,24 @@
+#![deny(clippy::pedantic)]
+#![deny(clippy::panic)]
+#![allow(clippy::cast_possible_truncation)]
+#![allow(clippy::cast_precision_loss)]
+#![allow(clippy::cast_sign_loss)]
+
+use std::fs::OpenOptions;
+use std::io::BufWriter;
+use std::path::Path;
+use std::process::Command;
+
+use indicatif::{ProgressBar, ProgressDrawTarget, ProgressStyle};
+use rayon::prelude::*;
+
+use crate::camera::Camera;
+use crate::intersections::{Hittable, World};
+use crate::material::Scatter;
+use crate::ppm::{WritePPM, write_header};
+use crate::random::rand;
+use crate::types::{Color, Ray, Vec3};
+
 mod camera;
 mod intersections;
 mod material;
@@ -7,19 +28,6 @@ mod random;
 mod scenes;
 mod texture;
 mod types;
-
-use crate::camera::*;
-use crate::intersections::*;
-use crate::material::*;
-use crate::ppm::*;
-use crate::random::*;
-use crate::types::*;
-use indicatif::{ProgressBar, ProgressDrawTarget, ProgressStyle};
-use rayon::prelude::*;
-use std::fs::OpenOptions;
-use std::io::BufWriter;
-use std::path::Path;
-use std::process::Command;
 
 fn ray_color(ray: &Ray, world: &World, depth: i32) -> Color {
     if depth <= 0 {
@@ -61,7 +69,7 @@ pub fn main() {
     );
 
     let image_width = 500;
-    let image_height = (image_width as f32 / aspect_ratio) as i32;
+    let image_height = (image_width as f32 / aspect_ratio) as u32;
     let samples_per_pixel = 50;
     let max_depth = 50;
 
@@ -76,7 +84,7 @@ pub fn main() {
 
     write_header(&mut file, image_width, image_height);
 
-    let pb = ProgressBar::new((image_height * image_width) as u64);
+    let pb = ProgressBar::new((image_height * image_width).into());
     pb.set_draw_target(ProgressDrawTarget::stdout());
     pb.set_draw_delta(pb.length() / 100);
     pb.set_style(ProgressStyle::default_bar().template(
@@ -94,7 +102,6 @@ pub fn main() {
                 .iter()
                 .map(|(j, i)| {
                     let mut pixel_color: Color = (0..samples_per_pixel)
-                        .into_iter()
                         .map(|_i| {
                             let u = (*i as f32 + rand()) / (image_width - 1) as f32;
                             let v = (*j as f32 + rand()) / (image_height - 1) as f32;

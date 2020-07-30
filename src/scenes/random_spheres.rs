@@ -1,7 +1,10 @@
-use crate::intersections::*;
-use crate::types::*;
-use crate::material::*;
-use crate::random::*;
+#![allow(dead_code)]
+#![allow(clippy::cast_precision_loss)]
+
+use crate::intersections::{MovingSphere, Sphere, World};
+use crate::types::{Color, Point3, Vec3};
+use crate::material::{Dielectric, Lambertian, Material, Metal};
+use crate::random::{rand, rand_range};
 use crate::scenes::Scene;
 
 pub fn scene() -> Scene {
@@ -24,7 +27,7 @@ fn make_world() -> World {
     world.add(Sphere {
         center: Point3::new(0.0, -1000.0, 0.0),
         radius: 1000.0,
-        material: material_ground.clone(),
+        material: material_ground,
     });
 
     for a in -11..11 {
@@ -37,7 +40,7 @@ fn make_world() -> World {
                         let center2 = center + Vec3::new(0.0, rand_range(0.0, 0.5), 0.0);
                         world.add(MovingSphere {
                             center1: center,
-                            center2: center2,
+                            center2,
                             time1: 0.0,
                             time2: 1.0,
                             radius: 0.2,
@@ -47,7 +50,7 @@ fn make_world() -> World {
                     }
                     x if x < 0.95 => {
                         world.add(Sphere {
-                            center: center,
+                            center,
                             radius: 0.2,
                             material: Material::from(Metal::new(
                                 Color::new(rand_range(0.5, 1.0), rand_range(0.5, 1.0), rand_range(0.5, 1.0)),
@@ -56,7 +59,7 @@ fn make_world() -> World {
                     }
                     _ => {
                         world.add(Sphere {
-                            center: center,
+                            center,
                             radius: 0.2,
                             material: Material::from(Dielectric(1.5)),
                         });
@@ -71,7 +74,7 @@ fn make_world() -> World {
     world.add(Sphere {
         center: Point3::new(0.0, 1.0, 0.0),
         radius: 1.0,
-        material: material1.clone(),
+        material: material1,
     });
 
     let material2 = Material::from(Lambertian::from_color(Color::new(0.4, 0.2, 0.1)));
@@ -79,7 +82,7 @@ fn make_world() -> World {
     world.add(Sphere {
         center: Point3::new(-4.0, 1.0, 0.0),
         radius: 1.0,
-        material: material2.clone(),
+        material: material2,
     });
 
     let material3 = Material::from(Metal::new(Color::new(0.7, 0.6, 0.5), 0.0));
@@ -87,7 +90,7 @@ fn make_world() -> World {
     world.add(Sphere {
         center: Point3::new(4.0, 1.0, 0.0),
         radius: 1.0,
-        material: material3.clone(),
+        material: material3,
     });
 
     world.build_bvh();

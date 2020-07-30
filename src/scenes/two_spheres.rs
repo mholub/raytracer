@@ -1,7 +1,9 @@
-use crate::intersections::*;
-use crate::material::*;
+#![allow(dead_code)]
+
+use crate::intersections::{Sphere, World};
+use crate::material::{Lambertian, Material};
 use crate::scenes::Scene;
-use crate::types::*;
+use crate::types::{Color, Point3};
 
 pub fn scene() -> Scene {
     Scene {
@@ -30,7 +32,7 @@ fn make_world() -> World {
     world.add(Sphere {
         center: Point3::new(0.0, 10.0, 0.0),
         radius: 10.0,
-        material: material_ground.clone(),
+        material: material_ground,
     });
 
     world.build_bvh();

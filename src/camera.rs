@@ -1,5 +1,5 @@
 use crate::types::{Point3, Vec3, Ray};
-use crate::random::{RandomVectors, rand_range};
+use crate::random::{Vector, rand_range};
 
 pub struct Camera {
     pub origin: Point3,
@@ -15,6 +15,7 @@ pub struct Camera {
 }
 
 impl Camera {
+    #[allow(clippy::too_many_arguments)]
     pub fn new(lookfrom: &Vec3, lookat: &Vec3, vup: &Vec3, vfov: f32, aspect_ratio: f32,
                aperture: f32, focus_dist: f32, t0: f32, t1: f32) -> Camera {
         let theta = vfov.to_radians();

@@ -126,7 +126,7 @@ pub struct Sphere {
 }
 
 impl Sphere {
-    fn get_uv(&self, local_p: Point3) -> (f32, f32) {
+    fn get_uv(local_p: Point3) -> (f32, f32) {
         let phi = local_p.z.atan2(local_p.x);
         let theta = local_p.y.asin();
         let u = 1.0 - (phi + f32::pi()) / (2.0 * f32::pi());
@@ -136,6 +136,7 @@ impl Sphere {
 }
 
 impl Hittable for Sphere {
+    #[allow(clippy::many_single_char_names)]
     fn hit(&self, ray: &Ray, t_min: f32, t_max: f32) -> Option<HitRecord> {
         let oc = ray.origin() - self.center;
         let a = ray.direction().magnitude_squared();
@@ -145,11 +146,11 @@ impl Hittable for Sphere {
 
         if d > 0.0 {
             let root = d.sqrt();
-            let temp = (-half_b - root) / a;
+            let mut temp = (-half_b - root) / a;
             if temp > t_min && temp < t_max {
                 let p = ray.at(temp);
                 let local_p = (p - self.center)/self.radius;
-                let (u, v) = self.get_uv(local_p);
+                let (u, v) = Self::get_uv(local_p);
 
                 let mut result = HitRecord {
                     point: ray.at(temp),
@@ -163,11 +164,11 @@ impl Hittable for Sphere {
                 return Some(result);
             }
 
-            let temp = (-half_b + root) / a;
+            temp = (-half_b + root) / a;
             if temp > t_min && temp < t_max {
                 let p = ray.at(temp);
                 let local_p = (p - self.center)/self.radius;
-                let (u, v) = self.get_uv(local_p);
+                let (u, v) = Self::get_uv(local_p);
                 let mut result = HitRecord {
                     point: ray.at(temp),
                     normal: (p - self.center) / self.radius,
